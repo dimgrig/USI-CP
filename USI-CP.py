@@ -50,9 +50,13 @@ def refresh_ports():
     console.insert(END, "\n")
     console.see(END)
 
+    global ports
+    ports.destroy()
     optionList = []
     for port in list_ports.comports(include_links=False):
         optionList.append(port.device)
+    optionList.insert(0, optionList[0])
+
     ports_var = StringVar(root)
     ports_var.set(optionList[0])
     ports = OptionMenu(frame_1_1, ports_var, *optionList)
