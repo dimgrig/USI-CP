@@ -5,6 +5,7 @@ from datetime import datetime
 #from numpy import asarray
 import serial # pip install pyserial
 from serial.tools import list_ports
+from sys import exit
 #import time
 from tkinter import *
 from tkinter.filedialog import askopenfilename
@@ -106,6 +107,10 @@ def refresh_ports():
     refresh_ports_list()
     return(cp_list)
 
+def exit_function():
+    ser.close()
+    exit(0)
+    
 def read_csv():
     csv_file_path = askopenfilename()
     f_csv = open(csv_file_path, 'rb')
@@ -126,6 +131,7 @@ def open_port():
     console.insert(END, "Port " + port + " opened\n")
     ser.baudrate = 9600
     ser.port = port.split(" ")[0]
+    #print(ser.port)
     ser.open()
     console.insert(END, ser)
     console.insert(END, "\n")
@@ -210,7 +216,7 @@ root.configure(menu=main_menu)
 first_item = Menu(main_menu, tearoff=0)
 main_menu.add_cascade(label='File', menu=first_item)
 first_item.add_command(label='Refresh', command=refresh_ports)
-first_item.add_command(label='Exit', command=exit)
+first_item.add_command(label='Exit', command=exit_function)
 
 second_item = Menu(main_menu, tearoff=0)
 main_menu.add_cascade(label='CSV', menu=second_item)
@@ -218,16 +224,27 @@ second_item.add_command(label='Open CSV', command=read_csv)
 
 def readLine(ser):
     str = ""
+    cnt = 0
     while 1:
         ch = ser.read().decode("utf-8")
         if(ch == '\r' or ch == '' or ch == '\n'):
+            cnt = 0
+            break
+        else:
+            cnt += 1
+
+        if cnt > 100:
             break
         str += ch
 
-    #print("str = " + str)
-    timestamp = datetime.strftime(datetime.now(), "%Y.%m.%d %H:%M:%S")
-    console.insert(END, "Received at " + timestamp + " : " + str +" \n")
-    console.see(END)
+    if cnt == 0:
+        #print("str = " + str)
+        timestamp = datetime.strftime(datetime.now(), "%Y.%m.%d %H:%M:%S")
+        console.insert(END, "Received at " + timestamp + " : " + str +" \n")
+        console.see(END)
+    else:
+        console.insert(END, "No data received ... \n")
+        console.see(END)
 
     return str
 
@@ -334,6 +351,7 @@ def my_mainloop():
     global d_result
 
     if ser.is_open:
+        #print("ISOPEN")        
         if (ser.inWaiting() > 0):
             line = readLine(ser)
             if line[0] == binascii.unhexlify('02').decode("utf-8") and line[-1] == binascii.unhexlify('03').decode("utf-8"):
@@ -353,18 +371,18 @@ def my_mainloop():
                             d_saved = False
                             d_compress = {}
                             d_uncompress = {}
-                            print("d_compress: ", d_compress)
-                            print("d_uncompress: ", d_uncompress)
+                            #print("d_compress: ", d_compress)
+                            #print("d_uncompress: ", d_uncompress)
 
                     if State == "3":
-                        print("d_compres: ", d_compress)
+                        #print("d_compres: ", d_compress)
                         if F in d_compress:
                             pass
                         else:
                             d_compress[F] = A
 
                     if State == "4":
-                        print("d_uncompress: ", d_uncompress)
+                        #print("d_uncompress: ", d_uncompress)
                         if F in d_uncompress:
                             pass
                         else:
@@ -373,8 +391,8 @@ def my_mainloop():
                     if State == "5":
                         if d_saved == False:
                             d_saved = True
-                            print("d_compress: ", d_compress)
-                            print("d_uncompress: ", d_uncompress)
+                            #print("d_compress: ", d_compress)
+                            #print("d_uncompress: ", d_uncompress)
                             if d_compress == {} or d_uncompress == {}:
                                 pass
                             else:
