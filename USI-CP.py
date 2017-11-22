@@ -62,9 +62,14 @@ frame_2_3.pack_propagate(False)
 frame_3_1.grid(row=2, column=0, columnspan=4)
 # frame_3_1.columnconfigure(0, weight=100)
 frame_3_1.pack_propagate(False)
+frame_3_1.grid_forget()
+frame_1_4.grid_forget()
+visible_console = False
 
 frame_plot.grid(row=0, column=4, rowspan=4)
 # frame_plot.pack_propagate(False)
+frame_plot.grid_forget()
+visible_plot = False
 
 console = ScrolledText(frame_3_1)
 console.pack()
@@ -81,6 +86,7 @@ ports.pack()
 
 def refresh_ports_list():
     global ports
+    global ports_var
     try:
         ports.destroy()
     except:
@@ -96,6 +102,7 @@ def refresh_ports_list():
     ports.pack()
 
 def refresh_ports():
+    close_port()
     cp_list = list_ports.comports(include_links=False)
     console.insert(END, "Available Ports\n")
     for cp in cp_list:
@@ -122,11 +129,15 @@ def read_csv():
 
     f_csv.close()
     write_plot(dict, {})
+    global visible_plot
+    visible_plot = False
+    hide_plot()
 
 def open_port():
     global ser
     global ports_var
     port = ports_var.get()
+    #print(ports_var.get())
     ser.close()
     console.insert(END, "Port " + port + " opened\n")
     ser.baudrate = 9600
@@ -136,6 +147,8 @@ def open_port():
     console.insert(END, ser)
     console.insert(END, "\n")
     console.see(END)
+    b_open_port.configure(state=DISABLED)
+    b_close_port.configure(state=NORMAL)
 
 def close_port():
     global ports_var
@@ -144,6 +157,8 @@ def close_port():
     console.insert(END, "\n")
     console.see(END)
     ser.close()
+    b_open_port.configure(state=NORMAL)
+    b_close_port.configure(state=DISABLED)
 
 def clear():
     console.delete('1.0', END)
@@ -161,9 +176,11 @@ def hide_console():
     global visible_console
     if visible_console:
         frame_3_1.grid_forget()
+        frame_1_4.grid_forget()
         visible_console = False
     else:
         frame_3_1.grid(row=2, column=0, columnspan=4)
+        frame_1_4.grid(row=0, column=3)
         visible_console = True
 
 l_state = Label(frame_2_1, text="State")
@@ -183,13 +200,13 @@ b_open_port = Button(frame_1_2, text="Open", command=open_port)
 b_open_port.pack(expand=True, fill='both')
 b_close_port = Button(frame_1_3, text="Close", command=close_port)
 b_close_port.pack(expand=True, fill='both')
+b_close_port.configure(state=DISABLED)
 b_clear = Button(frame_1_4, text="Clear", command=clear)
 b_clear.pack(expand=True, fill='both')
 b_hide_plot = Button(frame_2_4, text=">", command=hide_plot)
 b_hide_plot.pack(expand=True, fill='both')
 b_hide_console = Button(frame_2_4, text="v", command=hide_console)
 b_hide_console.pack(expand=True, fill='both')
-
 
 figure_plot = Figure(figsize=(5, 3), dpi=100)
 figure_sub_plot = figure_plot.add_subplot(111)
@@ -342,6 +359,11 @@ def write_plot(d_c, d_u):
     toolbar.update()
     canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=1)
 
+def console_clearing():
+    console_length = len(console.get(1.0, END))
+    print(console_length)
+    if console_length > 10000:
+        console.delete(1.0, 100.0)
 
 def my_mainloop():
     global ser
@@ -349,6 +371,8 @@ def my_mainloop():
     global d_compress
     global d_uncompress
     global d_result
+
+    console_clearing()
 
     if ser.is_open:
         #print("ISOPEN")        
@@ -367,10 +391,11 @@ def my_mainloop():
                     t_a.insert(INSERT, A)
 
                     if State == "1" or State == "2":
-                        if d_saved == True:
+                        if d_saved == True or len(d_compress) != 0 or len(d_uncompress) !=0 :
                             d_saved = False
                             d_compress = {}
                             d_uncompress = {}
+                            #print("CLEARED")
                             #print("d_compress: ", d_compress)
                             #print("d_uncompress: ", d_uncompress)
 
@@ -398,10 +423,14 @@ def my_mainloop():
                             else:
                                 write_csv(d_compress, d_uncompress)
                                 write_plot(d_compress, d_uncompress)
+                                global visible_plot
+                                visible_plot = False
+                                hide_plot()
 
 
                 else:
                     console.insert(END, "Received wrong CRC \n")
+
                     console.see(END)
             else:
                 console.insert(END, "Received wrong data \n")
