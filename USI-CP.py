@@ -27,7 +27,7 @@ visible_console = True
 
 ser = serial.Serial()
 root = Tk()
-root.iconbitmap('USI-CP.ico')
+#root.iconbitmap('USI-CP.ico')
 root.title("USI-CP")
 root.resizable(0,0)
 ports_var = StringVar(root)
@@ -71,7 +71,7 @@ frame_plot.grid(row=0, column=4, rowspan=4)
 frame_plot.grid_forget()
 visible_plot = False
 
-console = ScrolledText(frame_3_1)
+console = ScrolledText(frame_3_1, undo=False)
 console.pack()
 
 optionList = []
@@ -185,15 +185,15 @@ def hide_console():
 
 l_state = Label(frame_2_1, text="State")
 l_state.pack()
-t_state = Text(frame_2_1)
+t_state = Text(frame_2_1,undo=False)
 t_state.pack()
 l_f = Label(frame_2_2, text="F")
 l_f.pack()
-t_f = Text(frame_2_2)
+t_f = Text(frame_2_2,undo=False)
 t_f.pack()
 l_a = Label(frame_2_3, text="A")
 l_a.pack()
-t_a = Text(frame_2_3)
+t_a = Text(frame_2_3,undo=False)
 t_a.pack()
 
 b_open_port = Button(frame_1_2, text="Open", command=open_port)
@@ -361,7 +361,7 @@ def write_plot(d_c, d_u):
 
 def console_clearing():
     console_length = len(console.get(1.0, END))
-    print(console_length)
+    #print(console_length)
     if console_length > 10000:
         console.delete(1.0, 100.0)
 
@@ -382,13 +382,10 @@ def my_mainloop():
                 if CRC(line[1:-1]):
                     State = line[1]
                     F, A = line[2:-3].split(';')
-                    #print(State, F, A)
-                    t_state.delete("1.0", END)
-                    t_state.insert(INSERT, State)
-                    t_f.delete("1.0", END)
-                    t_f.insert(INSERT, F)
-                    t_a.delete("1.0", END)
-                    t_a.insert(INSERT, A)
+
+                    t_state.replace("1.0", END,State)
+                    t_f.replace("1.0", END, F)
+                    t_a.replace("1.0", END, A)
 
                     if State == "1" or State == "2":
                         if d_saved == True or len(d_compress) != 0 or len(d_uncompress) !=0 :
