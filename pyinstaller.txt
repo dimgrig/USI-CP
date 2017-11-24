@@ -1,1 +1,5 @@
+pyinstaller USI-CP.py --noconfirm --onefile --windowed --hidden-import=scipy --hidden-import=matplotlib --hidden-import=fixtk --hidden-import=scipy --hidden-import=tornado
+
 pyinstaller USI-CP.py --noconfirm --onefile --windowed
+
+pyinstaller USI-CP.py --noconfirm --onefile --debug

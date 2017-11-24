@@ -1,5 +1,5 @@
-import binascii
-import collections
+from binascii import unhexlify
+from collections import OrderedDict
 from datetime import datetime
 #import io
 #from numpy import asarray
@@ -13,8 +13,8 @@ from tkinter.ttk import *
 from tkinter.scrolledtext import ScrolledText
 import unicodecsv as csv
 
-import matplotlib
-matplotlib.use("TkAgg")
+#import matplotlib
+#matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
 
@@ -77,12 +77,13 @@ console.pack()
 optionList = []
 for port in list_ports.comports(include_links=False):
     optionList.append(port.device)
-optionList.insert(0, optionList[0])
 
-ports_var = StringVar(root)
-ports_var.set(optionList[0])
-ports = OptionMenu(frame_1_1, ports_var, *optionList)
-ports.pack()
+if len(optionList) != 0:
+    optionList.insert(0, optionList[0])
+    ports_var = StringVar(root)
+    ports_var.set(optionList[0])
+    ports = OptionMenu(frame_1_1, ports_var, *optionList)
+    ports.pack()
 
 def refresh_ports_list():
     global ports
@@ -94,12 +95,13 @@ def refresh_ports_list():
     optionList = []
     for port in list_ports.comports(include_links=False):
         optionList.append(port.device)
-    optionList.insert(0, optionList[0])
 
-    ports_var = StringVar(root)
-    ports_var.set(optionList[0])
-    ports = OptionMenu(frame_1_1, ports_var, *optionList)
-    ports.pack()
+    if len(optionList) != 0:
+        optionList.insert(0, optionList[0])
+        ports_var = StringVar(root)
+        ports_var.set(optionList[0])
+        ports = OptionMenu(frame_1_1, ports_var, *optionList)
+        ports.pack()
 
 def refresh_ports():
     close_port()
@@ -302,14 +304,14 @@ def write_csv(d_c, d_u):
     f_csv.write('\n')
 
     i = 1
-    od_c = collections.OrderedDict(sorted(d_c.items()))
+    od_c = OrderedDict(sorted(d_c.items()))
     for k, v in od_c.items():
         line = ("{},{},{}").format(i, k, v)
         i = i + 1
         f_csv.write(line)
         f_csv.write('\n')
 
-    od_u = collections.OrderedDict(sorted(d_u.items(), reverse=True))
+    od_u = OrderedDict(sorted(d_u.items(), reverse=True))
     for k, v in od_u.items():
         line = ("{},{},{}").format(i, k, v)
         i = i + 1
@@ -324,12 +326,12 @@ def write_plot(d_c, d_u):
     global canvas, figure_plot, toolbar
 
     y, x = [], []
-    od_c = collections.OrderedDict(sorted(d_c.items()))
+    od_c = OrderedDict(sorted(d_c.items()))
     for k, v in od_c.items():
         y.append(float(k))
         x.append(float(v))
 
-    od_u = collections.OrderedDict(sorted(d_u.items(), reverse=True))
+    od_u = OrderedDict(sorted(d_u.items(), reverse=True))
     for k, v in od_u.items():
         y.append(float(k))
         x.append(float(v))
@@ -378,7 +380,7 @@ def my_mainloop():
         #print("ISOPEN")        
         if (ser.inWaiting() > 0):
             line = readLine(ser)
-            if line[0] == binascii.unhexlify('02').decode("utf-8") and line[-1] == binascii.unhexlify('03').decode("utf-8"):
+            if line[0] == unhexlify('02').decode("utf-8") and line[-1] == unhexlify('03').decode("utf-8"):
                 if CRC(line[1:-1]):
                     State = line[1]
                     F, A = line[2:-3].split(';')
